@@ -1,0 +1,156 @@
+sources:
+  parent-pal-source:
+    kind: postgres
+    host: 127.0.0.1
+    port: 5432
+    database: local
+    user: local
+    password: local
+
+tools:
+  upsert_user:
+    kind: postgres-sql
+    source: parent-pal-source
+    statement: |
+      INSERT INTO public.user_info (fullname, email)
+      VALUES ($1, $2)
+      ON CONFLICT (email) DO NOTHING
+      RETURNING *
+    description: |
+      Checks if a user exists by email, and inserts a new user if not found.
+      Returns the existing or newly created user record.
+      Takes the user's full name and email.
+      Example:
+      {{
+          "fullname": "Jane Doe",
+          "email": "jane.doe@example.com"
+      }}
+    parameters:
+      - name: fullname
+        type: string
+        description: The user's full name
+      - name: email
+        type: string
+        description: The user's unique email address
+
+  search_sleep_track_by_user:
+    kind: postgres-sql
+    source: parent-pal-source
+    statement: |
+      SELECT * FROM public.sleep_track
+      WHERE userId = $1
+      LIMIT 10
+    description: |
+      Use this tool to get sleep tracking records for a specific user.
+      Takes a userId to filter sleep records of that user.
+      Example:
+      {{
+          "userId": "user@example.com",
+      }}
+    parameters:
+      - name: userId
+        type: string
+        description: User identifier for sleep records
+
+  # New INSERT statement tool
+  insert_sleep_track_record:
+    kind: postgres-sql
+    source: parent-pal-source
+    statement: |
+      INSERT INTO public.sleep_track (userid, start_date_time, end_date_time)
+      VALUES ($1, $2, $3)
+      RETURNING *
+    description: |
+      Use this tool to add a new sleep tracking record.
+      Takes the user's ID, sleep start timestamp, and sleep end timestamp.
+      Example:
+      {{
+          "userId": "user@example.com",
+          "startDateTime": "2023-11-20T22:00:00Z",
+          "endDateTime": "2023-11-21T06:30:00Z"
+      }}
+    parameters:
+      - name: userId
+        type: string
+        description: User identifier
+      - name: startDateTime
+        type: string
+        description: Timestamp of when sleep started (e.g., ISO 8601 format)
+      - name: endDateTime
+        type: string
+        description: Timestamp of when sleep ended (e.g., ISO 8601 format)
+
+  update_sleep_track_record:
+    kind: postgres-sql
+    source: parent-pal-source
+    statement: |
+      UPDATE public.sleep_track
+      SET start_date_time = $3, end_date_time = $4
+      WHERE userId = $1 AND start_date_time = $2
+      RETURNING *
+    description: |
+      Updates an existing sleep tracking record for a specific user, identified by their current (old) sleep start time.
+      Takes the user ID, the CURRENT (old) sleep start timestamp, and the NEW start and end timestamps.
+      Example:
+      {{
+          "userId": "user@example.com",
+          "oldStartDateTime": "2023-11-20T22:00:00Z",
+          "newStartDateTime": "2023-11-20T22:30:00Z",
+          "newEndDateTime": "2023-11-21T06:00:00Z"
+      }}
+    parameters:
+      - name: userId
+        type: string
+        description: User identifier
+      - name: oldStartDateTime
+        type: string
+        description: The current (original) timestamp of when sleep started (e.g., ISO 8601 format)
+      - name: newStartDateTime
+        type: string
+        description: The new timestamp of when sleep started (e.g., ISO 8601 format)
+      - name: newEndDateTime
+        type: string
+        description: The new timestamp of when sleep ended (e.g., ISO 8601 format)
+
+  delete_sleep_track_record:
+    kind: postgres-sql
+    source: parent-pal-source
+    statement: |
+      DELETE FROM public.sleep_track
+      WHERE userId = $1
+      AND ($2::timestamp IS NULL OR start_date_time = $2)
+      AND ($3::timestamp IS NULL OR end_date_time = $3)
+      RETURNING *
+    description: |
+      Deletes sleep tracking records for a specific user. The deletion is based on the userId, and optionally filtered by start_date_time and/or end_date_time.
+      Returns the records that were deleted.
+      Example 1 (Delete by start time):
+      {{
+          "userId": "user@example.com",
+          "startDateTime": "2025-11-20T22:00:00Z",
+          "endDateTime": null
+      }}
+      Example 2 (Delete by start and end time):
+      {{
+          "userId": "user@example.com",
+          "startDateTime": "2025-11-20T22:00:00Z",
+          "endDateTime": "2025-11-21T06:00:00Z"
+      }}
+    parameters:
+      - name: userId
+        type: string
+        description: User identifier
+      - name: startDateTime
+        type: string
+        description: Optional timestamp of when sleep started (e.g., ISO 8601 format). Use null if not filtering by start time.
+      - name: endDateTime
+        type: string
+        description: Optional timestamp of when sleep ended (e.g., ISO 8601 format). Use null if not filtering by end time.
+
+toolsets:
+  sleep_tracking_toolset:
+    - search_sleep_track_by_user
+    - insert_sleep_track_record
+    - upsert_user
+    - update_sleep_track_record
+    - delete_sleep_track_record
