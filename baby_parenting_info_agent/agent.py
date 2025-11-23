@@ -1,5 +1,5 @@
 from google.adk.agents.llm_agent import LlmAgent
-from google.adk.tools import google_search
+from google.adk.tools import google_search, AgentTool
 from google.adk.tools.mcp_tool.mcp_toolset import MCPToolset
 from google.adk.tools.mcp_tool.mcp_session_manager import StdioConnectionParams
 from mcp import StdioServerParameters
@@ -47,24 +47,25 @@ parallel_search = ParallelAgent(
     ] 
 )
 
+parallel_search_tool = AgentTool(agent=parallel_search)
+
 summary_agent = LlmAgent(
     model=model_name,
     name='summary_agent',
-    description='Synthesizes the parallel search results into a single, cohesive response for the user.',
+    description='Coordinator that handles greetings or fetches data for specific requests.',
+    tools=[parallel_search_tool], # The parallel agent wrapped as a tool
     instruction="""
-        You have received results from a knowledge agent and a location agent. 
-        Combine these two pieces of information into a single, cohesive, and easy-to-read response for the user. 
-        If one agent provided a helpful result and the other did not (e.g., location was not requested), focus on the helpful result.
-    """,
-    tools=[]
-)
+        You are a helpful parenting assistant capable of providing advice and finding local resources simultaneously.
 
-
-root_agent = SequentialAgent(
-    name="ParentingWorkflow",
-    description="Orchestrates the parenting request process by first fetching knowledge and location concurrently, then summarizing the details.",
-    sub_agents=[
-        parallel_search,
-        summary_agent
-    ]
+        **Logic Flow:**
+        1. **Greetings:** If the user says "hello", "hi", or introduces themselves:
+           - Do NOT call any tools.
+           - Reply warmly.
+           - Explain your capabilities: "I can answer questions about baby milestones and parenting advice while simultaneously finding relevant nearby locations (like parks, pediatricians, or stores) for you."
+        
+        2. **Requests:** If the user asks a question or makes a request (e.g., "Where can I buy diapers?" or "Why is my baby crying?"):
+           - Call the `parallel_knowledge_and_location` tool to gather data.
+           - Synthesize the tool outputs into a single, helpful response.
+    """
 )
+root_agent = summary_agent
