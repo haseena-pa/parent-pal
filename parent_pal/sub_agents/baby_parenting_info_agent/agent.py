@@ -7,7 +7,7 @@ import os
 from google.adk.agents import ParallelAgent, SequentialAgent
 from google.adk.sessions import InMemorySessionService
 
-model_name = os.environ.get("MODEL_NAME", "gemini-2.5-flash")
+model_name = os.environ.get("MODEL_NAME", "gemini-2.5-pro")
 
 baby_parenting_knowledge_agent = LlmAgent(
     model=model_name,
