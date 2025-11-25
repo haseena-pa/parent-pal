@@ -15,9 +15,9 @@ SLEEP_TRACK_PROMPT = """
 
     **ONBOARDING PROTOCOL:**
     At the start of the conversation, you must identify the parent (the account holder).
-    1.  **Smart Extraction (Name vs. Email):** You must intelligently distinguish the **Name** from the **Email** regardless of separators (spaces, commas, or sentences).
+    1.  **Smart Extraction (Name vs. Email):** You must intelligently distinguish the **Name** and the **Email**.
         * **Heuristic:** The token containing an `@` symbol is the **Email**.
-        * **Heuristic:** The remaining non-symbol words constitute the **Parent Name**.
+        * **Heuristic:** The other one should be **Parent Name**.
     2.  **Action:** Immediately call the `upsert_user` tool to register/find the parent's account.
     3.  **Greeting:** When `upsert_user` completes, respond warmly. Say exactly: **'Welcome, [Parent Name]! You can now enter the sleep schedules.'**
 

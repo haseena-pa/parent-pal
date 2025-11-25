@@ -1,26 +1,19 @@
-from google.adk.agents.llm_agent import Agent
-from toolbox_core import ToolboxSyncClient
-import datetime
+from google.adk.agents.llm_agent import LlmAgent
+import os
 from . import prompt
+from ...tools.tools import get_current_datetime, toolbox_tools
 
-# --- 1. Define the Tool Locally ---
-def get_current_datetime():
-    """
-    Retrieves the current real-time date and time. 
-    Useful for resolving relative time references like 'today', 'now', or 'yesterday'.
-    """
-    return datetime.datetime.now().strftime("%A, %B %d, %Y, %H:%M:%S")
+model_name = os.environ.get("MODEL_NAME", "gemini-2.5-flash")
 
-toolbox = ToolboxSyncClient("http://127.0.0.1:5000")
+tools = [get_current_datetime]
 
-# --- 2. Load and Append Tools ---
-remote_tools = toolbox.load_toolset("sleep_tracking_toolset")
-all_tools = remote_tools + [get_current_datetime]
+if toolbox_tools:  # Only add if not empty list
+    tools.extend(toolbox_tools)
 
-sleep_track_agent = Agent(
-    model='gemini-2.5-pro',
+sleep_track_agent = LlmAgent(
+    model=model_name,
     name='sleep_track_agent',
     description='A supportive assistant for parents to track and manage their baby\'s sleep patterns.',
     instruction=prompt.SLEEP_TRACK_PROMPT,
-    tools=all_tools 
+    tools=tools
 )

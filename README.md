@@ -1,24 +1,194 @@
 # Parent Pal
 
-Parent Pal is an AI-powered application designed to assist parents with two core needs: accessing parenting knowledge (including milestones and nearby facilities) and tracking their baby's sleep patterns.
+An AI-powered parenting assistant that helps parents track their baby's sleep patterns and access parenting information with location-based services.
 
-## Features
+## Table of Contents
+- [Problem](#problem)
+- [Solution](#solution)
+- [Architecture](#architecture)
+- [Setup Instructions](#setup-instructions)
 
-The application consists of two specialized agents:
+---
 
-### 1. Parenting & Location Agent (`baby_parenting_info_agent`)
+## Problem
 
-A comprehensive workflow that answers general parenting questions and finds relevant real-world locations.
+New parents face two critical challenges:
 
-- **Parenting Advice:** Provides information on baby milestones, general care, and parenting tips using Google Search.
-- **Location Finder:** Helps users find nearby essential services like hospitals, pediatricians, and sleep consultants using the Google Maps MCP server.
-- **Workflow:** Uses a **Parallel Agent** to fetch knowledge and location data simultaneously, followed by a **Summary Agent** that synthesizes the information into a helpful response.
+### 1. Information Overload & Access
+- Parents struggle to find reliable, quick answers to parenting questions (e.g., "Why is my baby crying?", "What are the developmental milestones for a 6-month-old?")
+- Difficulty locating nearby parenting resources like pediatricians, hospitals, parks, or sleep consultants
+- Need for real-time, contextual information that combines knowledge with actionable location data
 
-### 2. Baby Sleep Tracker Agent (`sleep_track_agent`)
+### 2. Sleep Pattern Tracking
+- Babies' sleep patterns are critical indicators of health and development
+- Manual tracking of sleep logs is tedious and error-prone
+- Parents need persistent, personalized records to identify patterns and share with healthcare providers
+- Existing tools lack intelligent assistance for data entry and pattern analysis
 
-A dedicated assistant for managing a baby's sleep schedule with persistent storage.
+---
 
-- **Log Sleep:** Records start and end times for naps and night sleep.
-- **Manage Records:** Allows parents to update or delete incorrect sleep entries.
-- **History:** Retrieves past sleep records to help track patterns.
-- **Personalization:** Identifies parents by name and email to maintain user-specific records.
+## Solution
+
+Parent Pal is an intelligent multi-agent system built using Google's Agent Development Kit (ADK) that provides:
+
+### Core Capabilities
+
+#### 1. **Intelligent Sleep Tracking**
+- Natural language interface for logging sleep data ("Baby slept from 2pm to 4pm")
+- Persistent storage using MCP Toolbox with PostgreSQL backend
+- User-specific records identified by name and email (stored in user_info table)
+- Full CRUD operations: log, retrieve, update, and delete sleep records (sleep_track table)
+- Context-aware time parsing (understands "today", "yesterday", "now")
+
+#### 2. **Parenting Knowledge & Location Services**
+- Real-time answers to parenting questions using Google Search
+- Nearby location discovery using Google Maps API
+- Parallel processing for simultaneous knowledge and location retrieval
+- Synthesized responses that combine information with actionable location data
+
+#### 3. **Conversational Interface**
+- Natural, context-aware interactions
+- User identity management (only asks for details when needed for sleep tracking)
+- Intelligent routing between different capabilities
+
+---
+
+## Architecture
+
+Parent Pal uses a **hierarchical multi-agent architecture** with specialized agents coordinated by a root agent.
+
+### System Overview
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                     Root Agent                              │
+│              (Parent Pal Coordinator)                       │
+│                                                             │
+│  • Routes user requests to appropriate sub-agents          │
+│  • Manages user context (name/email)                       │
+│  • Provides conversational interface                        │
+└─────────────────┬───────────────────────────┬───────────────┘
+                  │                           │
+        ┌─────────▼─────────┐       ┌────────▼──────────┐
+        │  Sleep Tracker    │       │   Parallel Agent  │
+        │      Tool         │       │   (Knowledge +    │
+        │                   │       │    Location)      │
+        └─────────┬─────────┘       └────────┬──────────┘
+                  │                           │
+                  │                  ┌────────┴─────────┐
+                  │                  │                  │
+                  │         ┌────────▼────────┐ ┌──────▼────────┐
+                  │         │ Parenting Agent │ │ Maps Agent    │
+                  │         │                 │ │               │
+                  │         │ • Google Search │ │ • Google Maps │
+                  │         └─────────────────┘ └───────────────┘
+                  │
+         ┌────────▼──────────┐
+         │  Tools:           │
+         │  • Datetime       │
+         │  • Toolbox DB     │
+         │    (CRUD ops)     │
+         └───────────────────┘
+```
+
+### Component Details
+
+#### 1. Root Agent (`parent_pal/agent.py:39`)
+- **Role:** Main coordinator and user interface
+- **Model:** Gemini 2.5 Flash
+- **Responsibilities:**
+  - Route requests based on user intent
+  - Maintain user context across conversations
+  - Intelligently ask for identity only when needed (for sleep tracking)
+  - Provide warm, conversational responses
+
+#### 2. Sleep Tracker Agent (`parent_pal/sub_agents/sleep_track_agent/agent.py:13`)
+- **Role:** Manage all sleep-related operations
+- **Tools:**
+  - `get_current_datetime()`: Resolves relative time references
+  - MCP Toolbox database tools: CRUD operations for sleep records
+- **Features:**
+  - User-specific data isolation (user_info table)
+  - Natural language time parsing
+  - Persistent storage via MCP Toolbox with PostgreSQL backend (sleep_track table)
+
+#### 3. Parallel Agent (`parent_pal/agent.py:25`)
+- **Role:** Execute parenting and location searches simultaneously
+- **Sub-agents:**
+  - **Parenting Agent** (`parent_pal/sub_agents/parenting_agent/agent.py:7`)
+    - Uses Google Search for parenting information
+    - Provides evidence-based advice on milestones, care tips, and common issues
+  - **Maps Location Agent** (`parent_pal/sub_agents/maps_location_agent/agent.py:9`)
+    - Uses Google Maps MCP server
+    - Finds nearby pediatricians, hospitals, parks, etc.
+- **Benefits:** Reduces response latency by running searches in parallel
+
+### Technology Stack
+
+- **Framework:** Google Agent Development Kit (ADK)
+- **LLM:** Gemini 2.5 Flash
+- **Database:** MCP Toolbox with PostgreSQL backend (local)
+  - `user_info` table: User identity and profile information
+  - `sleep_track` table: Baby sleep tracking records
+- **External APIs:**
+  - Google Search API
+  - Google Maps API (via MCP)
+- **Tools:**
+  - MCP (Model Context Protocol) for external integrations
+  - MCP Toolbox for database operations
+  - StdioServerParameters for MCP server connections
+
+### Data Flow
+
+1. **User Input** → Root Agent analyzes intent
+2. **Routing Decision:**
+   - Sleep tracking request → Sleep Tracker Agent → MCP Toolbox → PostgreSQL (user_info & sleep_track tables)
+   - Parenting/location query → Parallel Agent → [Parenting Agent + Maps Agent]
+3. **Tool Execution:** Agents call respective tools (MCP Toolbox/DB, Search, Maps)
+4. **Response Synthesis:** Results aggregated and formatted
+5. **User Output** → Natural language response with actionable information
+
+---
+
+## Setup Instructions
+
+### 1. Install Dependencies
+
+```bash
+pip install google-adk
+pip install toolbox_core
+```
+
+### 2. Set Up Toolbox
+
+Set up toolbox using the [GenAI Toolbox repository](https://github.com/googleapis/genai-toolbox)
+
+### 3. Start Toolbox Server
+
+In one terminal, run:
+
+```bash
+./toolbox --tools-file "tools.yaml"
+```
+
+### 4. Configure Environment Variables
+
+Rename `.env.example` to `.env` and provide the required API keys.
+
+### 5. Run the Application
+
+In a new terminal, run:
+
+```bash
+adk web
+```
+
+---
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## License
+
+[Add your license here]
