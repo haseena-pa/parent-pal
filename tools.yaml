@@ -3,7 +3,7 @@ sources:
     kind: postgres
     host: 127.0.0.1
     port: 5432
-    database: local
+    database: parent_pal
     user: local
     password: local
 
@@ -38,7 +38,7 @@ tools:
     source: parent-pal-source
     statement: |
       SELECT * FROM public.sleep_track
-      WHERE userId = $1
+      WHERE user_id = $1
       LIMIT 10
     description: |
       Use this tool to get sleep tracking records for a specific user.
@@ -57,7 +57,7 @@ tools:
     kind: postgres-sql
     source: parent-pal-source
     statement: |
-      INSERT INTO public.sleep_track (userid, start_date_time, end_date_time)
+      INSERT INTO public.sleep_track (user_id, start_date_time, end_date_time)
       VALUES ($1, $2, $3)
       RETURNING *
     description: |
@@ -86,7 +86,7 @@ tools:
     statement: |
       UPDATE public.sleep_track
       SET start_date_time = $3, end_date_time = $4
-      WHERE userId = $1 AND start_date_time = $2
+      WHERE user_id = $1 AND start_date_time = $2
       RETURNING *
     description: |
       Updates an existing sleep tracking record for a specific user, identified by their current (old) sleep start time.
@@ -117,7 +117,7 @@ tools:
     source: parent-pal-source
     statement: |
       DELETE FROM public.sleep_track
-      WHERE userId = $1
+      WHERE user_id = $1
       AND ($2::timestamp IS NULL OR start_date_time = $2)
       AND ($3::timestamp IS NULL OR end_date_time = $3)
       RETURNING *

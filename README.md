@@ -3,6 +3,7 @@
 An AI-powered parenting assistant that helps parents track their baby's sleep patterns and access parenting information with location-based services.
 
 ## Table of Contents
+
 - [Problem](#problem)
 - [Solution](#solution)
 - [Architecture](#architecture)
@@ -15,11 +16,13 @@ An AI-powered parenting assistant that helps parents track their baby's sleep pa
 New parents face two critical challenges:
 
 ### 1. Information Overload & Access
+
 - Parents struggle to find reliable, quick answers to parenting questions (e.g., "Why is my baby crying?", "What are the developmental milestones for a 6-month-old?")
 - Difficulty locating nearby parenting resources like pediatricians, hospitals, parks, or sleep consultants
 - Need for real-time, contextual information that combines knowledge with actionable location data
 
 ### 2. Sleep Pattern Tracking
+
 - Babies' sleep patterns are critical indicators of health and development
 - Manual tracking of sleep logs is tedious and error-prone
 - Parents need persistent, personalized records to identify patterns and share with healthcare providers
@@ -34,6 +37,7 @@ Parent Pal is an intelligent multi-agent system built using Google's Agent Devel
 ### Core Capabilities
 
 #### 1. **Intelligent Sleep Tracking**
+
 - Natural language interface for logging sleep data ("Baby slept from 2pm to 4pm")
 - Persistent storage using MCP Toolbox with PostgreSQL backend
 - User-specific records identified by name and email (stored in user_info table)
@@ -41,12 +45,14 @@ Parent Pal is an intelligent multi-agent system built using Google's Agent Devel
 - Context-aware time parsing (understands "today", "yesterday", "now")
 
 #### 2. **Parenting Knowledge & Location Services**
+
 - Real-time answers to parenting questions using Google Search
 - Nearby location discovery using Google Maps API
 - Parallel processing for simultaneous knowledge and location retrieval
 - Synthesized responses that combine information with actionable location data
 
 #### 3. **Conversational Interface**
+
 - Natural, context-aware interactions
 - User identity management (only asks for details when needed for sleep tracking)
 - Intelligent routing between different capabilities
@@ -94,6 +100,7 @@ Parent Pal uses a **hierarchical multi-agent architecture** with specialized age
 ### Component Details
 
 #### 1. Root Agent (`parent_pal/agent.py:39`)
+
 - **Role:** Main coordinator and user interface
 - **Model:** Gemini 2.5 Flash
 - **Responsibilities:**
@@ -103,6 +110,7 @@ Parent Pal uses a **hierarchical multi-agent architecture** with specialized age
   - Provide warm, conversational responses
 
 #### 2. Sleep Tracker Agent (`parent_pal/sub_agents/sleep_track_agent/agent.py:13`)
+
 - **Role:** Manage all sleep-related operations
 - **Tools:**
   - `get_current_datetime()`: Resolves relative time references
@@ -113,6 +121,7 @@ Parent Pal uses a **hierarchical multi-agent architecture** with specialized age
   - Persistent storage via MCP Toolbox with PostgreSQL backend (sleep_track table)
 
 #### 3. Parallel Agent (`parent_pal/agent.py:25`)
+
 - **Role:** Execute parenting and location searches simultaneously
 - **Sub-agents:**
   - **Parenting Agent** (`parent_pal/sub_agents/parenting_agent/agent.py:7`)
@@ -163,21 +172,42 @@ pip install toolbox_core
 
 Set up toolbox using the [GenAI Toolbox repository](https://github.com/googleapis/genai-toolbox)
 
-### 3. Start Toolbox Server
+### 3. Set Up Database
 
-In one terminal, run:
+Connect to PostgreSQL and create the database:
+
+```bash
+psql -h 127.0.0.1 -p 5432 -U local
+```
+
+Create the database:
+
+```sql
+CREATE DATABASE parent_pal;
+```
+
+Then exit psql and run the SQL script to create tables:
+
+```bash
+cd parent_pal/dataset
+psql -h 127.0.0.1 -p 5432 -U local -d parent_pal -f create_table.sql
+```
+
+### 4. Start Toolbox Server
+
+In one terminal, from the root folder run:
 
 ```bash
 ./toolbox --tools-file "tools.yaml"
 ```
 
-### 4. Configure Environment Variables
+### 5. Configure Environment Variables
 
 Rename `.env.example` to `.env` and provide the required API keys.
 
-### 5. Run the Application
+### 6. Run the Application
 
-In a new terminal, run:
+In a new terminal, from the root folder run:
 
 ```bash
 adk web
