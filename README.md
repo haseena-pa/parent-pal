@@ -174,6 +174,8 @@ Set up toolbox using the [GenAI Toolbox repository](https://github.com/googleapi
 
 ### 3. Set Up Database
 
+Download and install [postgres-client cli (psql).](https://www.tigerdata.com/blog/how-to-install-psql-on-mac-ubuntu-debian-windows)
+
 Connect to PostgreSQL and create the database:
 
 ```bash
