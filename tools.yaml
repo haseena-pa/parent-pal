@@ -142,9 +142,11 @@ tools:
         description: User identifier
       - name: startDateTime
         type: string
+        required: false
         description: Optional timestamp of when sleep started (e.g., ISO 8601 format). Use null if not filtering by start time.
       - name: endDateTime
         type: string
+        required: false
         description: Optional timestamp of when sleep ended (e.g., ISO 8601 format). Use null if not filtering by end time.
 
 toolsets:
