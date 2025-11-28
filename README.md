@@ -8,7 +8,7 @@ An AI-powered parenting assistant that helps parents track their baby's sleep pa
 - [Solution](#solution)
 - [Architecture](#architecture)
 - [Setup Instructions](#setup-instructions)
-
+- [Screenshots](#screenshots)
 ---
 
 ## Problem
@@ -217,10 +217,32 @@ adk web
 
 ---
 
-## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
 
-## License
 
-[Add your license here]
+
+## Screenshots
+
+Asking user info while choosing sleep tracker
+<img width="936" height="597" alt="image" src="https://github.com/user-attachments/assets/bfa28aa3-ffe6-4b8e-b570-4382d37c6250" />
+
+Create , Update, List Sleep Logs
+<img width="936" height="597" alt="image" src="https://github.com/user-attachments/assets/379a9012-c5c3-437a-b5b3-f146c52ea705" />
+
+
+Delete Sleep Log
+<img width="946" height="540" alt="image" src="https://github.com/user-attachments/assets/f530a51a-683f-419c-9e21-dfbfd3da5a4a" />
+
+Parenting Related queries
+<img width="946" height="583" alt="image" src="https://github.com/user-attachments/assets/4ca88e5c-0b2d-4422-a1b6-b8c5f2d7125c" />
+
+
+Location Related Queries
+
+<img width="946" height="490" alt="image" src="https://github.com/user-attachments/assets/38ee6cbb-1110-4338-8039-dc2ba77c6fc4" />
+
+
+
+
+
+
